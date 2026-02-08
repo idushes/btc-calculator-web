@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Calculator as CalcIcon, Zap, Server, ExternalLink, Info, X, Edit2, RotateCcw } from "lucide-react";
 
 // Generic generic Modal Component
-const Modal = ({ title, children, onClose, onReset }: { title: string, children: React.ReactNode, onClose: () => void, onReset?: () => void }) => (
+const Modal = ({ title, children, onClose, onReset, hideFooter }: { title: string, children: React.ReactNode, onClose: () => void, onReset?: () => void, hideFooter?: boolean }) => (
   <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm rounded-3xl" onClick={(e) => {
       if (e.target === e.currentTarget) onClose();
   }}>
@@ -22,22 +22,24 @@ const Modal = ({ title, children, onClose, onReset }: { title: string, children:
       </div>
       <div className="space-y-6">
         {children}
-        <div className="flex gap-3 pt-2">
-          {onReset && (
-              <button
-              onClick={onReset}
-              className="flex-1 px-4 py-2 text-xs font-medium text-zinc-400 bg-zinc-900 hover:bg-zinc-800 hover:text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-              <RotateCcw className="w-3 h-3" /> Reset
-              </button>
-          )}
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-xs font-bold text-black bg-white hover:bg-zinc-200 rounded-lg transition-colors"
-          >
-            Done
-          </button>
-        </div>
+        {!hideFooter && (
+            <div className="flex gap-3 pt-2">
+            {onReset && (
+                <button
+                onClick={onReset}
+                className="flex-1 px-4 py-2 text-xs font-medium text-zinc-400 bg-zinc-900 hover:bg-zinc-800 hover:text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                <RotateCcw className="w-3 h-3" /> Reset
+                </button>
+            )}
+            <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2 text-xs font-bold text-black bg-white hover:bg-zinc-200 rounded-lg transition-colors"
+            >
+                Done
+            </button>
+            </div>
+        )}
       </div>
     </div>
   </div>
@@ -190,7 +192,7 @@ export default function Calculator() {
 
       {/* Block Reward Modal */}
       {activeModal === 'reward' && (
-        <Modal title="Select Halving Era" onClose={() => setActiveModal(null)} onReset={resetReward}>
+        <Modal title="Select Halving Era" onClose={() => setActiveModal(null)} hideFooter={true}>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { value: 50, label: "2009-2012" },
@@ -204,7 +206,10 @@ export default function Calculator() {
               ].map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => setBlockReward(option.value)}
+                  onClick={() => {
+                    setBlockReward(option.value);
+                    setActiveModal(null);
+                  }}
                   className={`p-3 rounded-xl text-left transition-all border ${
                     Number(blockReward) === option.value
                       ? "bg-orange-500/10 border-orange-500/50 text-orange-500"
