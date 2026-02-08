@@ -226,7 +226,7 @@ export default function Calculator() {
             <CalcIcon className="w-6 h-6 text-orange-500" />
           </div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-            Theory of Energy Floor
+            Bitcoin Mining Cost Theory
           </h2>
         </div>
         
