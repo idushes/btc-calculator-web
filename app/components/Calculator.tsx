@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calculator as CalcIcon, Zap, Server, ExternalLink, Info, X, Edit2, RotateCcw } from "lucide-react";
+import { Calculator as CalcIcon, Zap, Server, ExternalLink, Info, X, Edit2, RotateCcw, Settings } from "lucide-react";
 
 // Generic generic Modal Component
 const Modal = ({ title, children, onClose, onReset, hideFooter }: { title: string, children: React.ReactNode, onClose: () => void, onReset?: () => void, hideFooter?: boolean }) => (
@@ -107,6 +107,21 @@ export default function Calculator() {
   const parsedDifficulty = Number(difficulty) || 0;
   const parsedBlockReward = Number(blockReward) || 0;
 
+  const DEFAULT_MARGIN = 0;
+
+  const [margin, setMargin] = useState<number | string>(DEFAULT_MARGIN);
+
+  useEffect(() => {
+    const savedMargin = localStorage.getItem("btc_calc_margin");
+    if (savedMargin) setMargin(savedMargin);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("btc_calc_margin", String(margin));
+  }, [margin]);
+
+  const parsedMargin = Number(margin) || 0;
+
   // Calculation Function
   const calculateFloorPrice = (efficiency: number) => {
     if (parsedBlockReward === 0) return 0;
@@ -119,7 +134,10 @@ export default function Calculator() {
     const costPerBlock = energyKwh * parsedElecCost;
     const pricePerBtc = costPerBlock / parsedBlockReward;
 
-    return pricePerBtc;
+    // Apply Margin
+    const priceWithMargin = pricePerBtc * (1 + parsedMargin / 100);
+
+    return priceWithMargin;
   };
 
   const device1Price = calculateFloorPrice(device1.efficiency);
@@ -129,13 +147,37 @@ export default function Calculator() {
   const resetDevice2 = () => setDevice2(DEFAULT_DEVICE_2);
   const resetReward = () => setBlockReward(DEFAULT_BLOCK_REWARD);
 
-
-
   const [showTooltip, setShowTooltip] = useState(false);
+  
+  const resetMargin = () => setMargin(DEFAULT_MARGIN);
+
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-3xl shadow-2xl relative">
       
+      {/* Settings Modal */}
+      {activeModal === 'settings' && (
+        <Modal title="Global Settings" onClose={() => setActiveModal(null)} onReset={resetMargin}>
+            <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-zinc-400">Profitability Margin (%)</label>
+                  <p className="text-[10px] text-zinc-500 mb-2">Desired profit margin on top of production cost.</p>
+                  <div className="relative group">
+                    <input
+                        type="number"
+                        step="1"
+                        value={margin}
+                        onChange={(e) => setMargin(e.target.value)}
+                        className="w-full px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-sm focus:outline-none focus:border-orange-500/50 transition-colors font-mono"
+                        placeholder="0"
+                    />
+                    <div className="absolute right-3 top-3 text-zinc-500 text-sm font-mono">%</div>
+                  </div>
+                </div>
+            </div>
+        </Modal>
+      )}
+
       {/* Device 1 Modal */}
       {activeModal === 'device1' && (
         <Modal title="Edit Device 1" onClose={() => setActiveModal(null)} onReset={resetDevice1}>
@@ -238,6 +280,15 @@ export default function Calculator() {
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Settings Button */}
+           <button 
+                className="p-2 cursor-pointer focus:outline-none text-zinc-600 hover:text-white transition-colors"
+                onClick={() => setActiveModal('settings')}
+                title="Global Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+
           {/* Formula Tooltip */}
           <div className="relative">
             <button 
@@ -250,13 +301,14 @@ export default function Calculator() {
             <div className={`absolute right-0 top-10 w-80 md:w-96 p-4 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl transition-all z-50 ${showTooltip ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
               <h4 className="text-sm font-medium text-white mb-2">Calculation Formula</h4>
               <div className="text-xs font-mono text-zinc-400 bg-black/50 p-3 rounded-lg mb-2 overflow-x-auto whitespace-nowrap">
-                (Diff × 2<sup className="text-[10px]">32</sup> × Eff × Cost) / (Reward × 10<sup className="text-[10px]">12</sup> × 3.6M)
+                (Cost/BTC) × (1 + Margin%)
               </div>
               <ul className="text-xs text-zinc-500 space-y-1">
                 <li>• Diff: Network Difficulty (T)</li>
                 <li>• Eff: Miner Efficiency (W/Th)</li>
                 <li>• Cost: Electricity ($/kWh)</li>
                 <li>• Reward: Block Reward (BTC)</li>
+                <li>• Margin: Profitability (%)</li>
               </ul>
             </div>
           </div>
