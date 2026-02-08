@@ -188,22 +188,35 @@ export default function Calculator() {
 
       {/* Block Reward Modal */}
       {activeModal === 'reward' && (
-        <Modal title="Edit Block Reward" onClose={() => setActiveModal(null)} onReset={resetReward}>
-            <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-zinc-400">Block Reward (BTC)</label>
-                  <input
-                    type="number"
-                    step="0.125"
-                    value={blockReward}
-                    onChange={(e) => setBlockReward(e.target.value)}
-                    className="w-full px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-sm focus:outline-none focus:border-orange-500/50 transition-colors font-mono"
-                  />
-                  <p className="text-[10px] text-zinc-500">
-                    Typical values: 6.25, 3.125, 1.5625
-                  </p>
-                </div>
+        <Modal title="Select Halving Era" onClose={() => setActiveModal(null)} onReset={resetReward}>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: 50, label: "2009-2012" },
+                { value: 25, label: "2012-2016" },
+                { value: 12.5, label: "2016-2020" },
+                { value: 6.25, label: "2020-2024" },
+                { value: 3.125, label: "2024-2028" },
+                { value: 1.5625, label: "2028-2032" },
+                { value: 0.78125, label: "2032-2036" },
+                { value: 0.390625, label: "2036-2040" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setBlockReward(option.value)}
+                  className={`p-3 rounded-xl text-left transition-all border ${
+                    Number(blockReward) === option.value
+                      ? "bg-orange-500/10 border-orange-500/50 text-orange-500"
+                      : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:border-zinc-700 hover:text-white"
+                  }`}
+                >
+                  <div className="text-sm font-bold font-mono">{option.value}</div>
+                  <div className="text-[10px] opacity-60 font-medium">{option.label}</div>
+                </button>
+              ))}
             </div>
+            <p className="text-[10px] text-zinc-500 text-center px-4">
+              Select the block reward corresponding to the Bitcoin halving era you want to simulate.
+            </p>
         </Modal>
       )}
 
