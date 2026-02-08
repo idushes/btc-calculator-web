@@ -15,6 +15,24 @@ export default function Calculator() {
   const [elecCost, setElecCost] = useState<number | string>(DEFAULT_ELEC_COST);
   const [difficulty, setDifficulty] = useState<number | string>(DEFAULT_DIFFICULTY);
 
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedElecCost = localStorage.getItem("btc_calc_elec_cost");
+    const savedDifficulty = localStorage.getItem("btc_calc_difficulty");
+
+    if (savedElecCost) setElecCost(savedElecCost);
+    if (savedDifficulty) setDifficulty(savedDifficulty);
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    localStorage.setItem("btc_calc_elec_cost", String(elecCost));
+  }, [elecCost]);
+
+  useEffect(() => {
+    localStorage.setItem("btc_calc_difficulty", String(difficulty));
+  }, [difficulty]);
+
   // Derived values for calculation
   const parsedElecCost = Number(elecCost) || 0;
   const parsedDifficulty = Number(difficulty) || 0;
