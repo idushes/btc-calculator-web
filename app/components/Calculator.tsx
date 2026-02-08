@@ -110,7 +110,14 @@ export default function Calculator() {
               Check Current <ExternalLink className="w-3 h-3" />
             </a>
           </div>
-          <div className="relative group">
+          <div className="relative group flex items-center gap-2">
+            <button
+              onClick={() => setDifficulty(d => (Number(d) * 0.99).toFixed(2))}
+              className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
+              title="Decrease by 1%"
+            >
+              -1%
+            </button>
             <input
               type="number"
               step="0.01"
@@ -119,6 +126,13 @@ export default function Calculator() {
               className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all font-mono text-lg"
               placeholder="125.86"
             />
+            <button
+              onClick={() => setDifficulty(d => (Number(d) * 1.01).toFixed(2))}
+              className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
+              title="Increase by 1%"
+            >
+              +1%
+            </button>
           </div>
         </div>
       </div>
