@@ -129,6 +129,8 @@ export default function Calculator() {
 
 
 
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-3xl shadow-2xl relative">
       
@@ -222,23 +224,27 @@ export default function Calculator() {
 
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-orange-500/10 rounded-xl">
-            <CalcIcon className="w-6 h-6 text-orange-500" />
+          <div className="p-3 bg-zinc-800/50 rounded-xl">
+            <CalcIcon className="w-6 h-6 text-zinc-600" />
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
             Bitcoin Mining Cost Theory
           </h2>
         </div>
         
         <div className="flex items-center gap-2">
           {/* Formula Tooltip */}
-          <div className="relative group/tooltip">
-            <div className="p-2 cursor-help">
-              <Info className="w-5 h-5 text-zinc-600 hover:text-zinc-400 transition-colors" />
-            </div>
-            <div className="absolute right-0 top-10 w-96 p-4 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 pointer-events-none group-hover/tooltip:pointer-events-auto">
+          <div className="relative">
+            <button 
+                className="p-2 cursor-help focus:outline-none"
+                onClick={() => setShowTooltip(!showTooltip)}
+                onBlur={() => setTimeout(() => setShowTooltip(false), 200)}
+            >
+              <Info className={`w-5 h-5 transition-colors ${showTooltip ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`} />
+            </button>
+            <div className={`absolute right-0 top-10 w-80 md:w-96 p-4 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl transition-all z-50 ${showTooltip ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
               <h4 className="text-sm font-medium text-white mb-2">Calculation Formula</h4>
-              <div className="text-xs font-mono text-zinc-400 bg-black/50 p-3 rounded-lg mb-2 overflow-x-auto">
+              <div className="text-xs font-mono text-zinc-400 bg-black/50 p-3 rounded-lg mb-2 overflow-x-auto whitespace-nowrap">
                 (Diff × 2<sup className="text-[10px]">32</sup> × Eff × Cost) / (Reward × 10<sup className="text-[10px]">12</sup> × 3.6M)
               </div>
               <ul className="text-xs text-zinc-500 space-y-1">
@@ -360,18 +366,17 @@ export default function Calculator() {
         </div>
       </div>
 
-      <div className="mt-8 pt-6 border-t border-zinc-800 text-center">
-        <p className="text-xs text-zinc-600">
-          Block Reward: {" "}
-          <span 
-            className="text-zinc-400 font-mono cursor-pointer hover:text-orange-500 hover:underline transition-colors"
-            onClick={() => setActiveModal('reward')}
-            title="Edit Block Reward"
-          >
+      <div className="mt-6 pt-4 border-t border-zinc-800 flex justify-center">
+        <div 
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-zinc-800/50 cursor-pointer transition-all group"
+          onClick={() => setActiveModal('reward')}
+          title="Change Block Reward"
+        >
+          <span className="text-xs text-zinc-500">Block Reward:</span>
+          <span className="text-xs font-mono font-bold text-zinc-300 group-hover:text-white transition-colors border-b border-dashed border-zinc-700 group-hover:border-orange-500">
             {parsedBlockReward} BTC
           </span>
-           {" "}• Fixed
-        </p>
+        </div>
       </div>
     </div>
   );
