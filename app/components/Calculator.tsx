@@ -275,7 +275,7 @@ export default function Calculator() {
             <CalcIcon className="w-6 h-6 text-zinc-600" />
           </div>
           <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-            Bitcoin Mining Cost
+            BTC Mining Cost
           </h2>
         </div>
         
