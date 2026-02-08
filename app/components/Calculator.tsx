@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calculator as CalcIcon, Zap, Server, ExternalLink } from "lucide-react";
+import { Calculator as CalcIcon, Zap, Server, ExternalLink, Info } from "lucide-react";
 
 export default function Calculator() {
   // Default values
@@ -66,13 +66,32 @@ export default function Calculator() {
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-3xl shadow-2xl">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-3 bg-orange-500/10 rounded-xl">
-          <CalcIcon className="w-6 h-6 text-orange-500" />
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-orange-500/10 rounded-xl">
+            <CalcIcon className="w-6 h-6 text-orange-500" />
+          </div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+            Theory of Energy Floor
+          </h2>
         </div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-          Theory of Energy Floor
-        </h2>
+        
+        {/* Formula Tooltip */}
+        <div className="relative group/tooltip">
+          <Info className="w-5 h-5 text-zinc-600 hover:text-zinc-400 cursor-help transition-colors" />
+          <div className="absolute right-0 top-8 w-96 p-4 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 pointer-events-none group-hover/tooltip:pointer-events-auto">
+            <h4 className="text-sm font-medium text-white mb-2">Calculation Formula</h4>
+            <div className="text-xs font-mono text-zinc-400 bg-black/50 p-3 rounded-lg mb-2 overflow-x-auto">
+              (Diff × 2<sup className="text-[10px]">32</sup> × Eff × Cost) / (Reward × 10<sup className="text-[10px]">12</sup> × 3.6M)
+            </div>
+            <ul className="text-xs text-zinc-500 space-y-1">
+              <li>• Diff: Network Difficulty (T)</li>
+              <li>• Eff: Miner Efficiency (W/Th)</li>
+              <li>• Cost: Electricity ($/kWh)</li>
+              <li>• Reward: Block Reward (BTC)</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -111,13 +130,6 @@ export default function Calculator() {
             </a>
           </div>
           <div className="relative group flex items-center gap-2">
-            <button
-              onClick={() => setDifficulty(d => (Number(d) * 0.99).toFixed(2))}
-              className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
-              title="Decrease by 1%"
-            >
-              -1%
-            </button>
             <input
               type="number"
               step="0.01"
@@ -126,6 +138,13 @@ export default function Calculator() {
               className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all font-mono text-lg"
               placeholder="125.86"
             />
+            <button
+              onClick={() => setDifficulty(d => (Number(d) * 0.99).toFixed(2))}
+              className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
+              title="Decrease by 1%"
+            >
+              -1%
+            </button>
             <button
               onClick={() => setDifficulty(d => (Number(d) * 1.01).toFixed(2))}
               className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
