@@ -300,16 +300,28 @@ export default function Calculator() {
             </button>
             <div className={`absolute right-0 top-10 w-80 md:w-96 p-4 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl transition-all z-50 ${showTooltip ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
               <h4 className="text-sm font-medium text-white mb-2">Calculation Formula</h4>
-              <div className="text-xs font-mono text-zinc-400 bg-black/50 p-3 rounded-lg mb-2 overflow-x-auto whitespace-nowrap">
-                (Cost/BTC) × (1 + Margin%)
+              
+              <div className="mb-3">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Target Price</div>
+                <div className="text-xs font-mono text-zinc-300 bg-black/50 p-2 rounded-lg overflow-x-auto whitespace-nowrap border border-zinc-800">
+                  Production Cost × (1 + Margin%)
+                </div>
               </div>
-              <ul className="text-xs text-zinc-500 space-y-1">
-                <li>• Diff: Network Difficulty (T)</li>
-                <li>• Eff: Miner Efficiency (W/Th)</li>
-                <li>• Cost: Electricity ($/kWh)</li>
-                <li>• Reward: Block Reward (BTC)</li>
-                <li>• Margin: Profitability (%)</li>
-              </ul>
+
+              <div className="mb-3">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Production Cost (1 BTC)</div>
+                <div className="text-xs font-mono text-zinc-300 bg-black/50 p-2 rounded-lg overflow-x-auto whitespace-nowrap border border-zinc-800">
+                  (Diff × 2<sup className="text-[10px]">32</sup> × Eff × Elec) / (Reward × 10<sup className="text-[10px]">12</sup> × 3.6M)
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-zinc-500">
+                <div>• Diff: Network Difficulty</div>
+                <div>• Eff: Efficiency (W/Th)</div>
+                <div>• Elec: Cost ($/kWh)</div>
+                <div>• Reward: Block Reward</div>
+                <div className="col-span-2 text-orange-500/80 mt-1">• 3.6M: Joules to kWh conversion</div>
+              </div>
             </div>
           </div>
         </div>
