@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bitcoin Mining Cost Theory",
+  title: "Bitcoin Mining Cost",
   description: "Calculate the energy floor price for Bitcoin mining based on hardware efficiency and electricity costs.",
 };
 
