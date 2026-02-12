@@ -6,17 +6,17 @@ import { ChevronDown } from "lucide-react";
 const PRESET_DEVICES: Device[] = [
   { name: "Antminer S21 XP Hyd.", efficiency: 12.0 },
   { name: "Antminer S21 XP", efficiency: 13.5 },
-  { name: "Antminer S21+", efficiency: 17.0 },
   { name: "Antminer S21 Hyd.", efficiency: 16.0 },
+  { name: "Antminer S21+", efficiency: 17.0 },
   { name: "Antminer S21", efficiency: 17.5 },
+  { name: "Whatsminer M60S", efficiency: 18.5 },
   { name: "Antminer T21", efficiency: 19.5 },
-  { name: "Antminer S19k Pro", efficiency: 23.0 },
   { name: "Antminer S19 XP Hyd.", efficiency: 20.0 },
   { name: "Antminer S19 XP", efficiency: 21.5 },
-  { name: "Antminer S19j Pro+", efficiency: 27.5 },
-  { name: "Whatsminer M60S", efficiency: 18.5 },
   { name: "Whatsminer M50S+", efficiency: 22.0 },
   { name: "Whatsminer M56S+", efficiency: 22.0 },
+  { name: "Antminer S19k Pro", efficiency: 23.0 },
+  { name: "Antminer S19j Pro+", efficiency: 27.5 },
 ];
 
 interface DeviceModalProps {
