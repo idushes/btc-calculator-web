@@ -17,7 +17,16 @@ export const Modal: React.FC<ModalProps> = ({ title, children, onClose, onReset,
   useEffect(() => {
     requestAnimationFrame(() => setIsVisible(true));
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+
+    return () => { 
+      document.body.style.overflow = ""; 
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   const handleClose = () => {
