@@ -19,6 +19,7 @@ export default function Calculator() {
     margin, setMargin,
     activeModal, setActiveModal,
     parsedBlockReward,
+    parsedMargin,
     device1Price,
     device2Price,
     resetDevice1,
@@ -71,8 +72,13 @@ export default function Calculator() {
       />
 
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4">
-          Estimated Production Cost (1 BTC)
+        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4 flex items-baseline gap-1.5 flex-wrap">
+          <span>Est. Production Cost (1 BTC)</span>
+          {parsedMargin > 0 && (
+            <span className="text-xs font-bold text-zinc-400 normal-case tracking-normal whitespace-nowrap">
+              +{parsedMargin}%
+            </span>
+          )}
         </h3>
         
         <DeviceCard 

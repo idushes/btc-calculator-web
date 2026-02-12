@@ -116,6 +116,7 @@ export const useCalculator = () => {
     activeModal,
     setActiveModal,
     parsedBlockReward,
+    parsedMargin,
     device1Price,
     device2Price,
     resetDevice1,
