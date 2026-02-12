@@ -1,5 +1,5 @@
-import React from "react";
-import { Zap, Server, ExternalLink } from "lucide-react";
+import React, { useState } from "react";
+import { Zap, Server, RefreshCw } from "lucide-react";
 
 interface CalculatorInputsProps {
   elecCost: number | string;
@@ -11,8 +11,30 @@ interface CalculatorInputsProps {
 export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
   elecCost, setElecCost, difficulty, setDifficulty
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchDifficulty = async () => {
+    setIsLoading(true);
+    console.log("[Difficulty] Starting fetch...");
+    try {
+      const res = await fetch("https://mempool.space/api/v1/mining/hashrate/3d");
+      console.log("[Difficulty] Response status:", res.status, res.statusText);
+      const data = await res.json();
+      console.log("[Difficulty] Raw data:", data);
+      console.log("[Difficulty] currentDifficulty:", data.currentDifficulty);
+      const diffInTrillions = (data.currentDifficulty / 1e12).toFixed(2);
+      console.log("[Difficulty] In trillions:", diffInTrillions);
+      setDifficulty(diffInTrillions);
+    } catch (err) {
+      console.error("[Difficulty] Error:", err);
+    } finally {
+      setIsLoading(false);
+      console.log("[Difficulty] Done.");
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-6 mb-8">
       {/* Electricity Cost Input */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-zinc-400 flex items-center gap-2">
@@ -33,20 +55,10 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
 
       {/* Network Difficulty Input */}
       <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <label className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-            <Server className="w-4 h-4 text-blue-500" />
-            Network Difficulty (T)
-          </label>
-          <a
-            href="https://www.coinwarz.com/mining/bitcoin/difficulty-chart"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-orange-500 hover:text-orange-400 transition-colors flex items-center gap-1"
-          >
-            Check Current <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
+        <label className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+          <Server className="w-4 h-4 text-blue-500" />
+          Network Difficulty (T)
+        </label>
         <div className="relative group flex items-center gap-2">
           <input
             type="number"
@@ -62,6 +74,14 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
             title="Decrease by 1%"
           >
             -1%
+          </button>
+          <button
+            onClick={fetchDifficulty}
+            disabled={isLoading}
+            className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all disabled:opacity-50"
+            title="Fetch current difficulty"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setDifficulty((Number(difficulty) * 1.01).toFixed(2))}
