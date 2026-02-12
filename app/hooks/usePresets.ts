@@ -107,5 +107,10 @@ export const usePresets = () => {
     getPreset,
     hasUnsavedState: activePresetId === null,
     MAX_NAME_LENGTH,
+    importPresets: useCallback((newPresets: Preset[]) => {
+      savePresetsToStorage(newPresets);
+      setPresets(newPresets);
+      setActivePresetId(null);
+    }, []),
   };
 };

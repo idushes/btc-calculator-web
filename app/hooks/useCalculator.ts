@@ -156,6 +156,59 @@ export const useCalculator = () => {
     setMargin(DEFAULT_MARGIN);
   }, [presetsHook]);
 
+  const exportSettings = useCallback(() => {
+    const settings = {
+      version: 1,
+      timestamp: new Date().toISOString(),
+      state: getCurrentState(),
+      presets: presetsHook.presets,
+    };
+    
+    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `btc-calculator-settings-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [getCurrentState, presetsHook.presets]);
+
+  const importSettings = useCallback((file: File) => {
+    return new Promise<void>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const settings = JSON.parse(content);
+          
+          if (!settings.state || !Array.isArray(settings.presets)) {
+            throw new Error("Invalid settings file format");
+          }
+
+          // Apply state
+          setElecCost(settings.state.elecCost);
+          setDifficulty(settings.state.difficulty);
+          setBlockReward(settings.state.blockReward);
+          setDevice1(settings.state.device1);
+          setDevice2(settings.state.device2);
+          setMargin(settings.state.margin);
+
+          // Apply presets
+          presetsHook.importPresets(settings.presets);
+          
+          resolve();
+        } catch (error) {
+          console.error("Failed to import settings:", error);
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsText(file);
+    });
+  }, [presetsHook]);
+
   return {
     elecCost,
     setElecCost,
@@ -189,5 +242,7 @@ export const useCalculator = () => {
     loadPreset,
     deleteCurrentPreset,
     createNew,
+    exportSettings,
+    importSettings,
   };
 };

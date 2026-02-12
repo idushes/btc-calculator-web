@@ -39,6 +39,8 @@ export default function Calculator() {
     loadPreset,
     deleteCurrentPreset,
     createNew,
+    exportSettings,
+    importSettings,
   } = useCalculator();
 
   return (
@@ -50,6 +52,8 @@ export default function Calculator() {
         onReset={resetMargin}
         margin={margin}
         setMargin={setMargin}
+        onExport={exportSettings}
+        onImport={importSettings}
       />
 
       <DeviceModal
