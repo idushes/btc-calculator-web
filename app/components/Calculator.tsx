@@ -9,6 +9,9 @@ import { DeviceCard } from "./calculator/DeviceCard";
 import { DeviceModal } from "./calculator/DeviceModal";
 import { SettingsModal } from "./calculator/SettingsModal";
 import { RewardModal } from "./calculator/RewardModal";
+import { SavePresetModal } from "./calculator/SavePresetModal";
+import { DeletePresetModal } from "./calculator/DeletePresetModal";
+import { PresetSelector } from "./calculator/PresetSelector";
 
 export default function Calculator() {
   const {
@@ -26,12 +29,21 @@ export default function Calculator() {
     resetDevice1,
     resetDevice2,
     resetReward,
-    resetMargin
+    resetMargin,
+    // Presets
+    presets,
+    activePreset,
+    hasUnsavedState,
+    maxPresetNameLength,
+    saveCurrentAsPreset,
+    loadPreset,
+    deleteCurrentPreset,
+    createNew,
   } = useCalculator();
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-3xl shadow-2xl relative">
-      
+    <>
+      {/* Modals rendered OUTSIDE the card to avoid backdrop-blur stacking context */}
       <SettingsModal 
         isOpen={activeModal === 'settings'} 
         onClose={() => setActiveModal(null)} 
@@ -65,57 +77,86 @@ export default function Calculator() {
         setBlockReward={setBlockReward}
       />
 
-      <CalculatorHeader onOpenSettings={() => setActiveModal('settings')} />
-
-      <CalculatorInputs 
-        elecCost={elecCost} setElecCost={setElecCost}
-        difficulty={difficulty} setDifficulty={setDifficulty}
+      <SavePresetModal
+        isOpen={activeModal === 'savePreset'}
+        onClose={() => setActiveModal(null)}
+        onSave={saveCurrentAsPreset}
+        maxLength={maxPresetNameLength}
       />
 
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4 flex items-baseline gap-1.5 flex-wrap">
-          <span>Est. Production Cost (1 BTC)</span>
-          {parsedMargin > 0 && (
-            <span className="text-xs font-bold text-zinc-400 normal-case tracking-normal whitespace-nowrap">
-              +{parsedMargin}%
-            </span>
-          )}
-        </h3>
-        
-        <DeviceCard 
-          device={device1} 
-          price={device1Price} 
-          onEdit={() => setActiveModal('device1')} 
+      <DeletePresetModal
+        isOpen={activeModal === 'deletePreset'}
+        onClose={() => setActiveModal(null)}
+        onDelete={deleteCurrentPreset}
+        presetName={activePreset?.name ?? ''}
+      />
+
+      <div className="w-full max-w-2xl mx-auto p-6 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-3xl shadow-2xl relative">
+
+        <CalculatorHeader 
+          onOpenSettings={() => setActiveModal('settings')}
+          onSave={() => setActiveModal('savePreset')}
+          onDelete={() => setActiveModal('deletePreset')}
+          hasUnsavedState={hasUnsavedState}
         />
 
-        <DeviceCard 
-          device={device2} 
-          price={device2Price} 
-          onEdit={() => setActiveModal('device2')} 
-          isSecondary
+        <PresetSelector
+          presets={presets}
+          activePreset={activePreset}
+          onSelect={loadPreset}
+          onCreateNew={createNew}
         />
-      </div>
 
-      <div className="mt-6 pt-4 border-t border-zinc-800 flex flex-col md:flex-row items-center md:justify-between gap-2">
-        <div 
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-zinc-800/50 cursor-pointer transition-all group"
-          onClick={() => setActiveModal('reward')}
-          title="Change Block Reward"
-        >
-          <span className="text-xs text-zinc-500">Block Reward:</span>
-          <span className="text-xs font-mono font-bold text-zinc-300 group-hover:text-white transition-colors border-b border-dashed border-zinc-700 group-hover:border-orange-500">
-            {parsedBlockReward} BTC
-          </span>
+        <CalculatorInputs 
+          elecCost={elecCost} setElecCost={setElecCost}
+          difficulty={difficulty} setDifficulty={setDifficulty}
+        />
+
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4 flex items-baseline gap-1.5 flex-wrap">
+            <span>Est. Production Cost (1 BTC)</span>
+            {parsedMargin > 0 && (
+              <span className="text-xs font-bold text-zinc-400 normal-case tracking-normal whitespace-nowrap">
+                +{parsedMargin}%
+              </span>
+            )}
+          </h3>
+          
+          <DeviceCard 
+            device={device1} 
+            price={device1Price} 
+            onEdit={() => setActiveModal('device1')} 
+          />
+
+          <DeviceCard 
+            device={device2} 
+            price={device2Price} 
+            onEdit={() => setActiveModal('device2')} 
+            isSecondary
+          />
         </div>
-        <Link
-          href="/theory"
-          className="inline-flex items-center gap-1.5 text-xs group/link px-3 py-1.5 rounded-lg hover:bg-zinc-800/50 transition-all cursor-pointer"
-          title="Learn about the production cost theory"
-        >
-          <span className="text-zinc-500">Inspired by</span>
-          <span className="font-mono font-bold text-zinc-300 group-hover/link:text-white transition-colors border-b border-dashed border-zinc-700 group-hover/link:border-orange-500">Pavel Solodkov</span>
-        </Link>
+
+        <div className="mt-6 pt-4 border-t border-zinc-800 flex flex-col md:flex-row items-center md:justify-between gap-2">
+          <div 
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-zinc-800/50 cursor-pointer transition-all group"
+            onClick={() => setActiveModal('reward')}
+            title="Change Block Reward"
+          >
+            <span className="text-xs text-zinc-500">Block Reward:</span>
+            <span className="text-xs font-mono font-bold text-zinc-300 group-hover:text-white transition-colors border-b border-dashed border-zinc-700 group-hover:border-orange-500">
+              {parsedBlockReward} BTC
+            </span>
+          </div>
+          <Link
+            href="/theory"
+            className="inline-flex items-center gap-1.5 text-xs group/link px-3 py-1.5 rounded-lg hover:bg-zinc-800/50 transition-all cursor-pointer"
+            title="Learn about the production cost theory"
+          >
+            <span className="text-zinc-500">Inspired by</span>
+            <span className="font-mono font-bold text-zinc-300 group-hover/link:text-white transition-colors border-b border-dashed border-zinc-700 group-hover/link:border-orange-500">Pavel Solodkov</span>
+          </Link>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

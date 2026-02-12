@@ -1,40 +1,65 @@
 import React, { useState } from "react";
-import { Calculator as CalcIcon, Settings, Info } from "lucide-react";
+import { Calculator as CalcIcon, Settings, Info, Save, Trash2 } from "lucide-react";
 
 interface CalculatorHeaderProps {
   onOpenSettings: () => void;
+  onSave?: () => void;
+  onDelete?: () => void;
+  hasUnsavedState: boolean;
 }
 
-export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ onOpenSettings }) => {
+export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ 
+  onOpenSettings, onSave, onDelete, hasUnsavedState 
+}) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-zinc-800/50 rounded-xl">
-          <CalcIcon className="w-6 h-6 text-zinc-600" />
-        </div>
         <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
           BTC Mining Cost
         </h2>
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        {/* Save or Delete button */}
+        {hasUnsavedState ? (
+          onSave && (
+            <button 
+              className="p-2 cursor-pointer focus:outline-none text-zinc-600 hover:text-orange-500 transition-colors"
+              onClick={onSave}
+              title="Save as preset"
+            >
+              <Save className="w-5 h-5" />
+            </button>
+          )
+        ) : (
+          onDelete && (
+            <button 
+              className="p-2 cursor-pointer focus:outline-none text-zinc-600 hover:text-red-500 transition-colors"
+              onClick={onDelete}
+              title="Delete preset"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )
+        )}
+
         {/* Settings Button */}
-         <button 
-              className="p-2 cursor-pointer focus:outline-none text-zinc-600 hover:text-white transition-colors"
-              onClick={onOpenSettings}
-              title="Global Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+        <button 
+          className="p-2 cursor-pointer focus:outline-none text-zinc-600 hover:text-white transition-colors"
+          onClick={onOpenSettings}
+          title="Global Settings"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
 
         {/* Formula Tooltip */}
         <div className="relative">
           <button 
-              className="p-2 cursor-help focus:outline-none"
-              onClick={() => setShowTooltip(!showTooltip)}
-              onBlur={() => setTimeout(() => setShowTooltip(false), 200)}
+            className="p-2 cursor-help focus:outline-none"
+            onClick={() => setShowTooltip(!showTooltip)}
+            onBlur={() => setTimeout(() => setShowTooltip(false), 200)}
           >
             <Info className={`w-5 h-5 transition-colors ${showTooltip ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`} />
           </button>

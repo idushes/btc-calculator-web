@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { usePresets, Preset } from "./usePresets";
 
 export interface Device {
   name: string;
@@ -25,6 +26,9 @@ export const useCalculator = () => {
   
   // Modal State
   const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  // Presets
+  const presetsHook = usePresets();
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -100,6 +104,58 @@ export const useCalculator = () => {
   const resetReward = () => setBlockReward(DEFAULT_BLOCK_REWARD);
   const resetMargin = () => setMargin(DEFAULT_MARGIN);
 
+  // Preset operations
+  const getCurrentState = useCallback(() => ({
+    elecCost,
+    difficulty,
+    blockReward,
+    device1,
+    device2,
+    margin,
+  }), [elecCost, difficulty, blockReward, device1, device2, margin]);
+
+  const applyPreset = useCallback((preset: Preset) => {
+    setElecCost(preset.elecCost);
+    setDifficulty(preset.difficulty);
+    setBlockReward(preset.blockReward);
+    setDevice1(preset.device1);
+    setDevice2(preset.device2);
+    setMargin(preset.margin);
+    presetsHook.setActivePresetId(preset.id);
+  }, [presetsHook]);
+
+  const loadPreset = useCallback((id: string) => {
+    const preset = presetsHook.getPreset(id);
+    if (preset) applyPreset(preset);
+  }, [presetsHook, applyPreset]);
+
+  const saveCurrentAsPreset = useCallback((name: string) => {
+    return presetsHook.savePreset(name, getCurrentState());
+  }, [presetsHook, getCurrentState]);
+
+  const deleteCurrentPreset = useCallback(() => {
+    if (presetsHook.activePresetId) {
+      presetsHook.deletePreset(presetsHook.activePresetId);
+      // Reset to defaults
+      setElecCost(DEFAULT_ELEC_COST);
+      setDifficulty(DEFAULT_DIFFICULTY);
+      setBlockReward(DEFAULT_BLOCK_REWARD);
+      setDevice1(DEFAULT_DEVICE_1);
+      setDevice2(DEFAULT_DEVICE_2);
+      setMargin(DEFAULT_MARGIN);
+    }
+  }, [presetsHook]);
+
+  const createNew = useCallback(() => {
+    presetsHook.setActivePresetId(null);
+    setElecCost(DEFAULT_ELEC_COST);
+    setDifficulty(DEFAULT_DIFFICULTY);
+    setBlockReward(DEFAULT_BLOCK_REWARD);
+    setDevice1(DEFAULT_DEVICE_1);
+    setDevice2(DEFAULT_DEVICE_2);
+    setMargin(DEFAULT_MARGIN);
+  }, [presetsHook]);
+
   return {
     elecCost,
     setElecCost,
@@ -122,6 +178,16 @@ export const useCalculator = () => {
     resetDevice1,
     resetDevice2,
     resetReward,
-    resetMargin
+    resetMargin,
+    // Presets
+    presets: presetsHook.presets,
+    activePreset: presetsHook.activePreset,
+    activePresetId: presetsHook.activePresetId,
+    hasUnsavedState: presetsHook.hasUnsavedState,
+    maxPresetNameLength: presetsHook.MAX_NAME_LENGTH,
+    saveCurrentAsPreset,
+    loadPreset,
+    deleteCurrentPreset,
+    createNew,
   };
 };
