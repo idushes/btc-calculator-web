@@ -30,7 +30,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, price, onEdit, i
         <div className={`text-3xl font-bold font-mono ${
             isSecondary ? 'text-zinc-300' : 'text-white'
         }`}>
-          ${price.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          ${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(price)}
         </div>
       </div>
       {!isSecondary && (
