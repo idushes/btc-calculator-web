@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useCalculator } from "../hooks/useCalculator";
 import { CalculatorHeader } from "./calculator/CalculatorHeader";
 import { CalculatorInputs } from "./calculator/CalculatorInputs";
@@ -95,7 +96,7 @@ export default function Calculator() {
         />
       </div>
 
-      <div className="mt-6 pt-4 border-t border-zinc-800 flex justify-center">
+      <div className="mt-6 pt-4 border-t border-zinc-800 flex flex-col md:flex-row items-center md:justify-between gap-2">
         <div 
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-zinc-800/50 cursor-pointer transition-all group"
           onClick={() => setActiveModal('reward')}
@@ -106,6 +107,14 @@ export default function Calculator() {
             {parsedBlockReward} BTC
           </span>
         </div>
+        <Link
+          href="/theory"
+          className="inline-flex items-center gap-1.5 text-xs group/link px-3 py-1.5 rounded-lg hover:bg-zinc-800/50 transition-all cursor-pointer"
+          title="Learn about the production cost theory"
+        >
+          <span className="text-zinc-500">Inspired by</span>
+          <span className="font-mono font-bold text-zinc-300 group-hover/link:text-white transition-colors border-b border-dashed border-zinc-700 group-hover/link:border-orange-500">Pavel Solodkov</span>
+        </Link>
       </div>
     </div>
   );
