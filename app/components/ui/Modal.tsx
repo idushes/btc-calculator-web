@@ -22,19 +22,21 @@ export const Modal: React.FC<ModalProps> = ({ title, children, onClose, onReset,
 
   const handleClose = () => {
     setIsVisible(false);
-    setTimeout(onClose, 200);
+    setTimeout(onClose, 150);
   };
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 transition-colors duration-200 ${
+      className={`fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 transition-all duration-150 ${
         isVisible ? "bg-black/60 backdrop-blur-sm" : "bg-black/0"
       }`}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div
-        className={`w-full md:max-w-sm bg-zinc-950 border border-zinc-800 md:rounded-2xl rounded-t-2xl p-6 shadow-2xl transition-transform duration-200 ease-out ${
-          isVisible ? "translate-y-0" : "translate-y-full md:translate-y-4"
+        className={`w-full md:max-w-sm bg-zinc-950 border border-zinc-800 md:rounded-2xl rounded-t-2xl p-6 shadow-2xl transition-all duration-150 ease-out ${
+          isVisible
+            ? "translate-y-0 md:scale-100 md:opacity-100"
+            : "translate-y-full md:translate-y-0 md:scale-95 md:opacity-0"
         }`}
       >
         {/* Mobile drag handle */}
