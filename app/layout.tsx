@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://btc.lisacorp.com"),
   title: "BTC Mining Cost",
   description: "Calculate the energy floor price for Bitcoin mining based on hardware efficiency and electricity costs.",
 };

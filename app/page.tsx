@@ -20,6 +20,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
         openGraph: {
           title: "BTC Mining Cost",
           description,
+          url: `https://btc.lisacorp.com/?s=${encoded}`,
           type: "website",
         },
       };
