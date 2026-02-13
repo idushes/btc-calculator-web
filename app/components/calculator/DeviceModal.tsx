@@ -32,6 +32,7 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({
   isOpen, onClose, onReset, device, setDevice, title 
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isCustomMode, setIsCustomMode] = useState(() => !PRESET_DEVICES.some(p => p.name === device.name));
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,15 +45,19 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setIsCustomMode(!PRESET_DEVICES.some(p => p.name === device.name));
+  }, [isOpen]);
 
-  const isPreset = PRESET_DEVICES.some(p => p.name === device.name);
+  if (!isOpen) return null;
 
   const handleSelect = (preset: Device | null) => {
     if (preset) {
       setDevice({ ...preset });
+      setIsCustomMode(false);
     } else {
       setDevice({ name: "", efficiency: device.efficiency });
+      setIsCustomMode(true);
     }
     setDropdownOpen(false);
   };
@@ -68,7 +73,7 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="w-full px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-sm focus:outline-none focus:border-orange-500/50 transition-colors cursor-pointer flex items-center justify-between"
             >
-              <span>{isPreset ? device.name : (device.name || "Custom...")}</span>
+              <span>{!isCustomMode ? device.name : (device.name || "Custom...")}</span>
               <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {dropdownOpen && (
@@ -92,7 +97,7 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({
                   type="button"
                   onClick={() => handleSelect(null)}
                   className={`w-full px-3 py-2.5 text-left text-sm transition-colors border-t border-zinc-800 ${
-                    !isPreset
+                    isCustomMode
                       ? 'bg-orange-500/10 text-orange-500'
                       : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
                   }`}
@@ -103,7 +108,7 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({
             )}
           </div>
         </div>
-        {!isPreset && (
+        {isCustomMode && (
           <div className="space-y-2">
             <label className="text-xs text-zinc-400">Custom Name</label>
             <input
@@ -112,6 +117,7 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({
               onChange={(e) => setDevice({ ...device, name: e.target.value })}
               className="w-full px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-sm focus:outline-none focus:border-orange-500/50 transition-colors"
               placeholder="Device name"
+              autoComplete="off"
             />
           </div>
         )}
