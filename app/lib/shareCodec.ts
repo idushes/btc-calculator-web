@@ -102,11 +102,12 @@ export function formatShareDescription(state: ShareableState): string {
   const price1 = calculateFloorPrice(state.device1.efficiency, elec, diff, reward, m);
   const price2 = calculateFloorPrice(state.device2.efficiency, elec, diff, reward, m);
 
-  const marginText = m > 0 ? `  📈 +${m}%` : "";
+  const marginText = m > 0 ? `\nMargin: +${m}%` : "";
   const lines = [
     `${state.device1.name} → ${formatPrice(price1)}`,
     `${state.device2.name} → ${formatPrice(price2)}`,
-    `⚡ $${elec}/kWh  ⛏️ ${diff}T  Reward: ${reward} BTC${marginText}`,
+    `Electricity: $${elec}/kWh`,
+    `Difficulty: ${diff}T | Reward: ${reward} BTC${marginText}`,
   ];
   return lines.join("\n");
 }
