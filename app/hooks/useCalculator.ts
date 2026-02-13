@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePresets, Preset } from "./usePresets";
 import { useShareState } from "./useShareState";
 
@@ -17,14 +17,25 @@ export const DEFAULT_MARGIN = 0;
 
 export const useCalculator = () => {
   // State
-  const [elecCost, setElecCost] = useState<number | string>(DEFAULT_ELEC_COST);
-  const [difficulty, setDifficulty] = useState<number | string>(DEFAULT_DIFFICULTY);
-  const [blockReward, setBlockReward] = useState<number | string>(DEFAULT_BLOCK_REWARD);
+  const [elecCost, setElecCostRaw] = useState<number | string>(DEFAULT_ELEC_COST);
+  const [difficulty, setDifficultyRaw] = useState<number | string>(DEFAULT_DIFFICULTY);
+  const [blockReward, setBlockRewardRaw] = useState<number | string>(DEFAULT_BLOCK_REWARD);
   
-  const [device1, setDevice1] = useState<Device>(DEFAULT_DEVICE_1);
-  const [device2, setDevice2] = useState<Device>(DEFAULT_DEVICE_2);
-  const [margin, setMargin] = useState<number | string>(DEFAULT_MARGIN);
+  const [device1, setDevice1Raw] = useState<Device>(DEFAULT_DEVICE_1);
+  const [device2, setDevice2Raw] = useState<Device>(DEFAULT_DEVICE_2);
+  const [margin, setMarginRaw] = useState<number | string>(DEFAULT_MARGIN);
   
+  // Shared view: when true, skip localStorage writes to preserve user's data
+  const isSharedView = useRef(false);
+
+  // Wrapped setters: clear shared view flag on any user interaction
+  const setElecCost = useCallback((v: number | string) => { isSharedView.current = false; setElecCostRaw(v); }, []);
+  const setDifficulty = useCallback((v: number | string) => { isSharedView.current = false; setDifficultyRaw(v); }, []);
+  const setBlockReward = useCallback((v: number | string) => { isSharedView.current = false; setBlockRewardRaw(v); }, []);
+  const setDevice1 = useCallback((v: Device) => { isSharedView.current = false; setDevice1Raw(v); }, []);
+  const setDevice2 = useCallback((v: Device) => { isSharedView.current = false; setDevice2Raw(v); }, []);
+  const setMargin = useCallback((v: number | string) => { isSharedView.current = false; setMarginRaw(v); }, []);
+
   // Modal State
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
@@ -34,7 +45,7 @@ export const useCalculator = () => {
   // Share
   const { shareCurrentState: shareState, shareStatus, sharedState } = useShareState();
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (use raw setters to skip shared-view clearing)
   useEffect(() => {
     const savedElecCost = localStorage.getItem("btc_calc_elec_cost");
     const savedDifficulty = localStorage.getItem("btc_calc_difficulty");
@@ -43,49 +54,56 @@ export const useCalculator = () => {
     const savedDevice2 = localStorage.getItem("btc_calc_device2");
     const savedMargin = localStorage.getItem("btc_calc_margin");
 
-    if (savedElecCost) setElecCost(savedElecCost);
-    if (savedDifficulty) setDifficulty(savedDifficulty);
-    if (savedBlockReward) setBlockReward(savedBlockReward);
-    if (savedDevice1) setDevice1(JSON.parse(savedDevice1));
-    if (savedDevice2) setDevice2(JSON.parse(savedDevice2));
-    if (savedMargin) setMargin(savedMargin);
+    if (savedElecCost) setElecCostRaw(savedElecCost);
+    if (savedDifficulty) setDifficultyRaw(savedDifficulty);
+    if (savedBlockReward) setBlockRewardRaw(savedBlockReward);
+    if (savedDevice1) setDevice1Raw(JSON.parse(savedDevice1));
+    if (savedDevice2) setDevice2Raw(JSON.parse(savedDevice2));
+    if (savedMargin) setMarginRaw(savedMargin);
   }, []);
 
-  // Apply shared state from URL hash (overrides localStorage)
+  // Apply shared state from URL (view-only: use raw setters + set flag)
   useEffect(() => {
     if (sharedState) {
-      setElecCost(sharedState.elecCost);
-      setDifficulty(sharedState.difficulty);
-      setBlockReward(sharedState.blockReward);
-      setDevice1(sharedState.device1);
-      setDevice2(sharedState.device2);
-      setMargin(sharedState.margin);
+      isSharedView.current = true;
+      setElecCostRaw(sharedState.elecCost);
+      setDifficultyRaw(sharedState.difficulty);
+      setBlockRewardRaw(sharedState.blockReward);
+      setDevice1Raw(sharedState.device1);
+      setDevice2Raw(sharedState.device2);
+      setMarginRaw(sharedState.margin);
       presetsHook.setActivePresetId(null);
     }
   }, [sharedState]);
 
-  // Save to localStorage on change
+  // Save to localStorage on change (skip when viewing shared link)
   useEffect(() => {
+    if (isSharedView.current) return;
     localStorage.setItem("btc_calc_elec_cost", String(elecCost));
   }, [elecCost]);
 
   useEffect(() => {
+    if (isSharedView.current) return;
     localStorage.setItem("btc_calc_difficulty", String(difficulty));
   }, [difficulty]);
 
   useEffect(() => {
+    if (isSharedView.current) return;
     localStorage.setItem("btc_calc_block_reward", String(blockReward));
   }, [blockReward]);
   
   useEffect(() => {
+    if (isSharedView.current) return;
     localStorage.setItem("btc_calc_device1", JSON.stringify(device1));
   }, [device1]);
 
   useEffect(() => {
+    if (isSharedView.current) return;
     localStorage.setItem("btc_calc_device2", JSON.stringify(device2));
   }, [device2]);
 
   useEffect(() => {
+    if (isSharedView.current) return;
     localStorage.setItem("btc_calc_margin", String(margin));
   }, [margin]);
 
@@ -131,8 +149,9 @@ export const useCalculator = () => {
     margin,
   }), [elecCost, difficulty, blockReward, device1, device2, margin]);
 
-  // Auto-save: update active preset whenever state changes
+  // Auto-save: update active preset whenever state changes (skip in shared view)
   useEffect(() => {
+    if (isSharedView.current) return;
     if (!presetsHook.activePresetId) return;
     presetsHook.updatePreset(presetsHook.activePresetId, {
       elecCost, difficulty, blockReward, device1, device2, margin,
