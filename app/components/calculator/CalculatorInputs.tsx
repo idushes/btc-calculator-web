@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Zap, Server, RefreshCw } from "lucide-react";
+import { Zap, Server, RefreshCw, ExternalLink } from "lucide-react";
 
 interface CalculatorInputsProps {
   elecCost: number | string;
@@ -55,10 +55,20 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
 
       {/* Network Difficulty Input */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-          <Server className="w-4 h-4 text-blue-500" />
-          Network Difficulty (T)
-        </label>
+        <div className="flex justify-between items-center">
+          <label className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+            <Server className="w-4 h-4 text-blue-500" />
+            Network Difficulty (T)
+          </label>
+          <a
+            href="https://www.coinwarz.com/mining/bitcoin/difficulty-chart"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-zinc-600 hover:text-zinc-300 transition-colors flex items-center gap-1 border-b border-dashed border-zinc-800 hover:border-zinc-500 pb-px"
+          >
+            Chart <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        </div>
         <div className="relative group flex items-center gap-2">
           <input
             type="number"
