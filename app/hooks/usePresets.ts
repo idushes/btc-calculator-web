@@ -91,6 +91,28 @@ export const usePresets = () => {
     [activePresetId]
   );
 
+  const updatePreset = useCallback(
+    (
+      id: string,
+      state: {
+        elecCost: number | string;
+        difficulty: number | string;
+        blockReward: number | string;
+        device1: Device;
+        device2: Device;
+        margin: number | string;
+      }
+    ) => {
+      const all = loadPresets();
+      const idx = all.findIndex((p) => p.id === id);
+      if (idx === -1) return;
+      all[idx] = { ...all[idx], ...state };
+      savePresetsToStorage(all);
+      setPresets(all);
+    },
+    []
+  );
+
   const getPreset = useCallback((id: string): Preset | undefined => {
     return loadPresets().find((p) => p.id === id);
   }, []);
@@ -103,6 +125,7 @@ export const usePresets = () => {
     activePreset,
     setActivePresetId,
     savePreset,
+    updatePreset,
     deletePreset,
     getPreset,
     hasUnsavedState: activePresetId === null,

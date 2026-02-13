@@ -131,6 +131,14 @@ export const useCalculator = () => {
     margin,
   }), [elecCost, difficulty, blockReward, device1, device2, margin]);
 
+  // Auto-save: update active preset whenever state changes
+  useEffect(() => {
+    if (!presetsHook.activePresetId) return;
+    presetsHook.updatePreset(presetsHook.activePresetId, {
+      elecCost, difficulty, blockReward, device1, device2, margin,
+    });
+  }, [elecCost, difficulty, blockReward, device1, device2, margin]);
+
   const applyPreset = useCallback((preset: Preset) => {
     setElecCost(preset.elecCost);
     setDifficulty(preset.difficulty);
