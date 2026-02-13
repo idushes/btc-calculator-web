@@ -1,22 +1,24 @@
 import React, { useState } from "react";
-import { Calculator as CalcIcon, Settings, Info, Save, Trash2 } from "lucide-react";
+import { Calculator as CalcIcon, Settings, Info, Save, Trash2, Share2, Check, AlertCircle } from "lucide-react";
 
 interface CalculatorHeaderProps {
   onOpenSettings: () => void;
   onSave?: () => void;
   onDelete?: () => void;
+  onShare?: () => void;
+  shareStatus?: "idle" | "copied" | "error";
   hasUnsavedState: boolean;
 }
 
 export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ 
-  onOpenSettings, onSave, onDelete, hasUnsavedState 
+  onOpenSettings, onSave, onDelete, onShare, shareStatus = "idle", hasUnsavedState 
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
-        <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+        <h2 className="text-base md:text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent whitespace-nowrap">
           BTC Mining Cost
         </h2>
       </div>
@@ -43,6 +45,27 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
               <Trash2 className="w-5 h-5" />
             </button>
           )
+        )}
+
+        {/* Share Button */}
+        {onShare && (
+          <div className="relative">
+            <button 
+              className={`p-2 cursor-pointer focus:outline-none transition-colors ${
+                shareStatus === "copied" ? "text-green-500" : shareStatus === "error" ? "text-red-500" : "text-zinc-600 hover:text-orange-500"
+              }`}
+              onClick={onShare}
+              title="Share link"
+            >
+              {shareStatus === "copied" ? (
+                <Check className="w-5 h-5" />
+              ) : shareStatus === "error" ? (
+                <AlertCircle className="w-5 h-5" />
+              ) : (
+                <Share2 className="w-5 h-5" />
+              )}
+            </button>
+          </div>
         )}
 
         {/* Settings Button */}

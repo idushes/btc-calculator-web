@@ -41,6 +41,8 @@ export default function Calculator() {
     createNew,
     exportSettings,
     importSettings,
+    shareCurrentState,
+    shareStatus,
   } = useCalculator();
 
   return (
@@ -101,6 +103,8 @@ export default function Calculator() {
           onOpenSettings={() => setActiveModal('settings')}
           onSave={() => setActiveModal('savePreset')}
           onDelete={() => setActiveModal('deletePreset')}
+          onShare={shareCurrentState}
+          shareStatus={shareStatus}
           hasUnsavedState={hasUnsavedState}
         />
 

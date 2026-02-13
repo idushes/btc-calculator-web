@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePresets, Preset } from "./usePresets";
+import { useShareState } from "./useShareState";
 
 export interface Device {
   name: string;
@@ -30,6 +31,9 @@ export const useCalculator = () => {
   // Presets
   const presetsHook = usePresets();
 
+  // Share
+  const { shareCurrentState: shareState, shareStatus, sharedState } = useShareState();
+
   // Load from localStorage on mount
   useEffect(() => {
     const savedElecCost = localStorage.getItem("btc_calc_elec_cost");
@@ -46,6 +50,19 @@ export const useCalculator = () => {
     if (savedDevice2) setDevice2(JSON.parse(savedDevice2));
     if (savedMargin) setMargin(savedMargin);
   }, []);
+
+  // Apply shared state from URL hash (overrides localStorage)
+  useEffect(() => {
+    if (sharedState) {
+      setElecCost(sharedState.elecCost);
+      setDifficulty(sharedState.difficulty);
+      setBlockReward(sharedState.blockReward);
+      setDevice1(sharedState.device1);
+      setDevice2(sharedState.device2);
+      setMargin(sharedState.margin);
+      presetsHook.setActivePresetId(null);
+    }
+  }, [sharedState]);
 
   // Save to localStorage on change
   useEffect(() => {
@@ -156,6 +173,10 @@ export const useCalculator = () => {
     setMargin(DEFAULT_MARGIN);
   }, [presetsHook]);
 
+  const shareCurrentState = useCallback(() => {
+    return shareState(getCurrentState());
+  }, [shareState, getCurrentState]);
+
   const exportSettings = useCallback(() => {
     const settings = {
       version: 1,
@@ -244,5 +265,7 @@ export const useCalculator = () => {
     createNew,
     exportSettings,
     importSettings,
+    shareCurrentState,
+    shareStatus,
   };
 };
