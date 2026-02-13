@@ -9,6 +9,7 @@ const PRESET_DEVICES: Device[] = [
   { name: "Antminer S21 Hyd.", efficiency: 16.0 },
   { name: "Antminer S21+", efficiency: 17.0 },
   { name: "Antminer S21", efficiency: 17.5 },
+  { name: "Antminer S21 pro", efficiency: 15 },
   { name: "Whatsminer M60S", efficiency: 18.5 },
   { name: "Antminer T21", efficiency: 19.5 },
   { name: "Antminer S19 XP Hyd.", efficiency: 20.0 },
