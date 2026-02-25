@@ -8,7 +8,7 @@ export interface Device {
 }
 
 export const DEFAULT_ELEC_COST = 0.06;
-export const DEFAULT_DIFFICULTY = 125.86; // Trillions
+export const DEFAULT_DIFFICULTY = 140; // Trillions
 export const DEFAULT_BLOCK_REWARD = 3.125;
 export const J_TO_KWH = 3.6e6;
 export const DEFAULT_DEVICE_1: Device = { name: "Antminer S21+", efficiency: 17.0 };
