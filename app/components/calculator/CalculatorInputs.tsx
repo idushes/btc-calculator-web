@@ -8,6 +8,57 @@ interface CalculatorInputsProps {
   setDifficulty: (value: number | string) => void;
 }
 
+const DIFFICULTY_FETCH_TIMEOUT_MS = 8000;
+
+type MempoolHashrateResponse = {
+  currentDifficulty?: number;
+};
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const fetchWithTimeout = async (url: string): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), DIFFICULTY_FETCH_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      throw new Error(`${url} returned ${res.status} ${res.statusText}`);
+    }
+
+    return res;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
+const fetchMempoolDifficulty = async (): Promise<number> => {
+  const res = await fetchWithTimeout("https://mempool.space/api/v1/mining/hashrate/1m");
+  const data = (await res.json()) as MempoolHashrateResponse;
+
+  if (!isFiniteNumber(data.currentDifficulty)) {
+    throw new Error("mempool.space response does not include currentDifficulty");
+  }
+
+  return data.currentDifficulty;
+};
+
+const fetchBlockchainInfoDifficulty = async (): Promise<number> => {
+  const res = await fetchWithTimeout("https://blockchain.info/q/getdifficulty");
+  const difficulty = Number(await res.text());
+
+  if (!Number.isFinite(difficulty)) {
+    throw new Error("blockchain.info response is not a valid difficulty value");
+  }
+
+  return difficulty;
+};
+
 export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
   elecCost, setElecCost, difficulty, setDifficulty
 }) => {
@@ -15,21 +66,22 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
 
   const fetchDifficulty = async () => {
     setIsLoading(true);
-    console.log("[Difficulty] Starting fetch...");
     try {
-      const res = await fetch("https://mempool.space/api/v1/mining/hashrate/3d");
-      console.log("[Difficulty] Response status:", res.status, res.statusText);
-      const data = await res.json();
-      console.log("[Difficulty] Raw data:", data);
-      console.log("[Difficulty] currentDifficulty:", data.currentDifficulty);
-      const diffInTrillions = (data.currentDifficulty / 1e12).toFixed(2);
-      console.log("[Difficulty] In trillions:", diffInTrillions);
+      let currentDifficulty: number;
+
+      try {
+        currentDifficulty = await fetchMempoolDifficulty();
+      } catch (primaryError) {
+        console.warn("[Difficulty] mempool.space fetch failed, using fallback:", primaryError);
+        currentDifficulty = await fetchBlockchainInfoDifficulty();
+      }
+
+      const diffInTrillions = (currentDifficulty / 1e12).toFixed(2);
       setDifficulty(diffInTrillions);
     } catch (err) {
       console.error("[Difficulty] Error:", err);
     } finally {
       setIsLoading(false);
-      console.log("[Difficulty] Done.");
     }
   };
 
