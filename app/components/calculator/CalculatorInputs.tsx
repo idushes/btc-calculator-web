@@ -14,6 +14,17 @@ type MempoolHashrateResponse = {
   currentDifficulty?: number;
 };
 
+type MempoolDifficultyAdjustmentResponse = {
+  difficultyChange?: number;
+  remainingBlocks?: number;
+};
+
+type NextDifficultyEstimate = {
+  nextDifficultyT: string;
+  changePercent: number;
+  remainingBlocks?: number;
+};
+
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
@@ -59,13 +70,33 @@ const fetchBlockchainInfoDifficulty = async (): Promise<number> => {
   return difficulty;
 };
 
+const fetchNextDifficultyEstimate = async (
+  currentDifficulty: number
+): Promise<NextDifficultyEstimate> => {
+  const res = await fetchWithTimeout("https://mempool.space/api/v1/difficulty-adjustment");
+  const data = (await res.json()) as MempoolDifficultyAdjustmentResponse;
+
+  if (!isFiniteNumber(data.difficultyChange)) {
+    throw new Error("mempool.space response does not include difficultyChange");
+  }
+
+  return {
+    nextDifficultyT: ((currentDifficulty * (1 + data.difficultyChange / 100)) / 1e12).toFixed(2),
+    changePercent: data.difficultyChange,
+    remainingBlocks: isFiniteNumber(data.remainingBlocks) ? data.remainingBlocks : undefined,
+  };
+};
+
 export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
   elecCost, setElecCost, difficulty, setDifficulty
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [nextDifficultyEstimate, setNextDifficultyEstimate] =
+    useState<NextDifficultyEstimate | null>(null);
 
   const fetchDifficulty = async () => {
     setIsLoading(true);
+    setNextDifficultyEstimate(null);
     try {
       let currentDifficulty: number;
 
@@ -78,6 +109,12 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
 
       const diffInTrillions = (currentDifficulty / 1e12).toFixed(2);
       setDifficulty(diffInTrillions);
+
+      try {
+        setNextDifficultyEstimate(await fetchNextDifficultyEstimate(currentDifficulty));
+      } catch (estimateError) {
+        console.warn("[Difficulty] next retarget estimate fetch failed:", estimateError);
+      }
     } catch (err) {
       console.error("[Difficulty] Error:", err);
     } finally {
@@ -126,12 +163,18 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
             type="number"
             step="0.01"
             value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
+            onChange={(e) => {
+              setNextDifficultyEstimate(null);
+              setDifficulty(e.target.value);
+            }}
             className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all font-mono text-lg"
             placeholder="125.86"
           />
           <button
-            onClick={() => setDifficulty((Number(difficulty) * 0.99).toFixed(2))}
+            onClick={() => {
+              setNextDifficultyEstimate(null);
+              setDifficulty((Number(difficulty) * 0.99).toFixed(2));
+            }}
             className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
             title="Decrease by 1%"
           >
@@ -146,13 +189,39 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
-            onClick={() => setDifficulty((Number(difficulty) * 1.01).toFixed(2))}
+            onClick={() => {
+              setNextDifficultyEstimate(null);
+              setDifficulty((Number(difficulty) * 1.01).toFixed(2));
+            }}
             className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
             title="Increase by 1%"
           >
             +1%
           </button>
         </div>
+        {nextDifficultyEstimate && (
+          <div className="flex items-center justify-between gap-2 text-[11px] text-zinc-500">
+            <span>Est. next retarget</span>
+            <span className="font-mono text-zinc-300">
+              {nextDifficultyEstimate.nextDifficultyT} T
+              <span
+                className={
+                  nextDifficultyEstimate.changePercent >= 0
+                    ? "ml-1 text-emerald-400"
+                    : "ml-1 text-red-400"
+                }
+              >
+                ({nextDifficultyEstimate.changePercent >= 0 ? "+" : ""}
+                {nextDifficultyEstimate.changePercent.toFixed(2)}%)
+              </span>
+              {nextDifficultyEstimate.remainingBlocks !== undefined && (
+                <span className="ml-1 text-zinc-600">
+                  / {nextDifficultyEstimate.remainingBlocks} blocks
+                </span>
+              )}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
