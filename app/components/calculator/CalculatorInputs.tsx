@@ -9,6 +9,8 @@ interface CalculatorInputsProps {
 }
 
 const DIFFICULTY_FETCH_TIMEOUT_MS = 8000;
+const DIFFICULTY_ESTIMATE_MAX_ATTEMPTS = 3;
+const DIFFICULTY_ESTIMATE_BLOCK_TOLERANCE = 3;
 
 type MempoolHashrateResponse = {
   currentDifficulty?: number;
@@ -17,6 +19,11 @@ type MempoolHashrateResponse = {
 type MempoolDifficultyAdjustmentResponse = {
   difficultyChange?: number;
   remainingBlocks?: number;
+  nextRetargetHeight?: number;
+};
+
+type MempoolDifficultyAdjustment = MempoolDifficultyAdjustmentResponse & {
+  difficultyChange: number;
 };
 
 type NextDifficultyEstimate = {
@@ -27,6 +34,9 @@ type NextDifficultyEstimate = {
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
+
+const withCacheBuster = (url: string, attempt = 0) =>
+  `${url}?_=${Date.now()}-${attempt}`;
 
 const fetchWithTimeout = async (url: string): Promise<Response> => {
   const controller = new AbortController();
@@ -49,7 +59,9 @@ const fetchWithTimeout = async (url: string): Promise<Response> => {
 };
 
 const fetchMempoolDifficulty = async (): Promise<number> => {
-  const res = await fetchWithTimeout("https://mempool.space/api/v1/mining/hashrate/1m");
+  const res = await fetchWithTimeout(
+    withCacheBuster("https://mempool.space/api/v1/mining/hashrate/1m")
+  );
   const data = (await res.json()) as MempoolHashrateResponse;
 
   if (!isFiniteNumber(data.currentDifficulty)) {
@@ -70,21 +82,84 @@ const fetchBlockchainInfoDifficulty = async (): Promise<number> => {
   return difficulty;
 };
 
-const fetchNextDifficultyEstimate = async (
-  currentDifficulty: number
-): Promise<NextDifficultyEstimate> => {
-  const res = await fetchWithTimeout("https://mempool.space/api/v1/difficulty-adjustment");
+const fetchMempoolBlockHeight = async (): Promise<number> => {
+  const res = await fetchWithTimeout(
+    withCacheBuster("https://mempool.space/api/blocks/tip/height")
+  );
+  const blockHeight = Number(await res.text());
+
+  if (!Number.isInteger(blockHeight)) {
+    throw new Error("mempool.space response is not a valid block height");
+  }
+
+  return blockHeight;
+};
+
+const fetchMempoolDifficultyAdjustment = async (
+  attempt: number
+): Promise<MempoolDifficultyAdjustment> => {
+  const res = await fetchWithTimeout(
+    withCacheBuster("https://mempool.space/api/v1/difficulty-adjustment", attempt)
+  );
   const data = (await res.json()) as MempoolDifficultyAdjustmentResponse;
 
   if (!isFiniteNumber(data.difficultyChange)) {
     throw new Error("mempool.space response does not include difficultyChange");
   }
 
-  return {
-    nextDifficultyT: ((currentDifficulty * (1 + data.difficultyChange / 100)) / 1e12).toFixed(2),
-    changePercent: data.difficultyChange,
-    remainingBlocks: isFiniteNumber(data.remainingBlocks) ? data.remainingBlocks : undefined,
-  };
+  return { ...data, difficultyChange: data.difficultyChange };
+};
+
+const isDifficultyAdjustmentSynced = (
+  data: MempoolDifficultyAdjustmentResponse,
+  currentBlockHeight: number
+) => {
+  if (!isFiniteNumber(data.nextRetargetHeight) || !isFiniteNumber(data.remainingBlocks)) {
+    return true;
+  }
+
+  const expectedRemainingBlocks = Math.max(0, data.nextRetargetHeight - currentBlockHeight);
+
+  return (
+    Math.abs(expectedRemainingBlocks - data.remainingBlocks) <=
+    DIFFICULTY_ESTIMATE_BLOCK_TOLERANCE
+  );
+};
+
+const fetchNextDifficultyEstimate = async (
+  currentDifficulty: number
+): Promise<NextDifficultyEstimate> => {
+  let currentBlockHeight: number | null = null;
+
+  try {
+    currentBlockHeight = await fetchMempoolBlockHeight();
+  } catch (heightError) {
+    console.warn("[Difficulty] block height fetch failed, cannot validate estimate:", heightError);
+  }
+
+  for (let attempt = 0; attempt < DIFFICULTY_ESTIMATE_MAX_ATTEMPTS; attempt += 1) {
+    const data = await fetchMempoolDifficultyAdjustment(attempt);
+
+    if (currentBlockHeight === null || isDifficultyAdjustmentSynced(data, currentBlockHeight)) {
+      const remainingBlocks =
+        currentBlockHeight !== null && isFiniteNumber(data.nextRetargetHeight)
+          ? Math.max(0, data.nextRetargetHeight - currentBlockHeight)
+          : isFiniteNumber(data.remainingBlocks)
+            ? data.remainingBlocks
+            : undefined;
+
+      return {
+        nextDifficultyT: (
+          (currentDifficulty * (1 + data.difficultyChange / 100)) /
+          1e12
+        ).toFixed(2),
+        changePercent: data.difficultyChange,
+        remainingBlocks,
+      };
+    }
+  }
+
+  throw new Error("mempool.space difficulty adjustment response is stale");
 };
 
 export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
