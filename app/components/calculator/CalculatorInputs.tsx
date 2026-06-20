@@ -29,7 +29,6 @@ type MempoolDifficultyAdjustment = MempoolDifficultyAdjustmentResponse & {
 type NextDifficultyEstimate = {
   nextDifficultyT: string;
   changePercent: number;
-  remainingBlocks?: number;
 };
 
 const isFiniteNumber = (value: unknown): value is number =>
@@ -141,20 +140,12 @@ const fetchNextDifficultyEstimate = async (
     const data = await fetchMempoolDifficultyAdjustment(attempt);
 
     if (currentBlockHeight === null || isDifficultyAdjustmentSynced(data, currentBlockHeight)) {
-      const remainingBlocks =
-        currentBlockHeight !== null && isFiniteNumber(data.nextRetargetHeight)
-          ? Math.max(0, data.nextRetargetHeight - currentBlockHeight)
-          : isFiniteNumber(data.remainingBlocks)
-            ? data.remainingBlocks
-            : undefined;
-
       return {
         nextDifficultyT: (
           (currentDifficulty * (1 + data.difficultyChange / 100)) /
           1e12
         ).toFixed(2),
         changePercent: data.difficultyChange,
-        remainingBlocks,
       };
     }
   }
@@ -277,7 +268,16 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
         {nextDifficultyEstimate && (
           <div className="flex items-center justify-between gap-2 text-[11px] text-zinc-500">
             <span>Est. next retarget</span>
-            <span className="font-mono text-zinc-300">
+            <button
+              type="button"
+              onClick={() => {
+                setDifficulty(nextDifficultyEstimate.nextDifficultyT);
+                setNextDifficultyEstimate(null);
+              }}
+              className="font-mono text-zinc-300 hover:text-white transition-colors cursor-pointer text-right"
+              title="Use estimated difficulty"
+              aria-label="Use estimated next difficulty"
+            >
               {nextDifficultyEstimate.nextDifficultyT} T
               <span
                 className={
@@ -289,12 +289,7 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
                 ({nextDifficultyEstimate.changePercent >= 0 ? "+" : ""}
                 {nextDifficultyEstimate.changePercent.toFixed(2)}%)
               </span>
-              {nextDifficultyEstimate.remainingBlocks !== undefined && (
-                <span className="ml-1 text-zinc-600">
-                  / {nextDifficultyEstimate.remainingBlocks} blocks
-                </span>
-              )}
-            </span>
+            </button>
           </div>
         )}
       </div>
