@@ -22,6 +22,13 @@ shareable URL state, Open Graph metadata for shared links, and a theory page.
 - `lucide-react` for icons
 - `@vercel/speed-insights` in the root layout
 
+## Hosting
+
+- Production hosting: Vercel.
+- Production domain: `https://btc.lisacorp.com/`.
+- Keep metadata, Open Graph URLs, and share links aligned with the production
+  domain.
+
 ## Commands
 
 - Install dependencies with `npm install` when needed.
