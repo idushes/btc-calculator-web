@@ -25,6 +25,7 @@ shareable URL state, Open Graph metadata for shared links, and a theory page.
 ## Hosting
 
 - Production hosting: Vercel.
+- Vercel project: `https://vercel.com/lisateam/btc-calculator`.
 - Production domain: `https://btc.lisacorp.com/`.
 - Keep metadata, Open Graph URLs, and share links aligned with the production
   domain.
