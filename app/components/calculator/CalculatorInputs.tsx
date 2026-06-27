@@ -20,6 +20,7 @@ type MempoolDifficultyAdjustmentResponse = {
   difficultyChange?: number;
   remainingBlocks?: number;
   nextRetargetHeight?: number;
+  estimatedRetargetDate?: number;
 };
 
 type MempoolDifficultyAdjustment = MempoolDifficultyAdjustmentResponse & {
@@ -29,6 +30,7 @@ type MempoolDifficultyAdjustment = MempoolDifficultyAdjustmentResponse & {
 type NextDifficultyEstimate = {
   nextDifficultyT: string;
   changePercent: number;
+  retargetTimeLabel?: string;
 };
 
 const isFiniteNumber = (value: unknown): value is number =>
@@ -36,6 +38,22 @@ const isFiniteNumber = (value: unknown): value is number =>
 
 const withCacheBuster = (url: string, attempt = 0) =>
   `${url}?_=${Date.now()}-${attempt}`;
+
+const formatLocalRetargetTime = (timestamp: unknown) => {
+  if (!isFiniteNumber(timestamp)) return undefined;
+
+  const normalizedTimestamp = timestamp < 1e12 ? timestamp * 1000 : timestamp;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const dateTime = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(normalizedTimestamp));
+
+  return timeZone ? `${dateTime} (${timeZone})` : dateTime;
+};
 
 const fetchWithTimeout = async (url: string): Promise<Response> => {
   const controller = new AbortController();
@@ -146,6 +164,7 @@ const fetchNextDifficultyEstimate = async (
           1e12
         ).toFixed(2),
         changePercent: data.difficultyChange,
+        retargetTimeLabel: formatLocalRetargetTime(data.estimatedRetargetDate),
       };
     }
   }
@@ -266,30 +285,40 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
           </button>
         </div>
         {nextDifficultyEstimate && (
-          <div className="flex items-center justify-between gap-2 text-[11px] text-zinc-500">
-            <span>Est. next retarget</span>
-            <button
-              type="button"
-              onClick={() => {
-                setDifficulty(nextDifficultyEstimate.nextDifficultyT);
-                setNextDifficultyEstimate(null);
-              }}
-              className="font-mono text-zinc-300 hover:text-white transition-colors cursor-pointer text-right"
-              title="Use estimated difficulty"
-              aria-label="Use estimated next difficulty"
-            >
-              {nextDifficultyEstimate.nextDifficultyT} T
-              <span
-                className={
-                  nextDifficultyEstimate.changePercent >= 0
-                    ? "ml-1 text-emerald-400"
-                    : "ml-1 text-red-400"
-                }
+          <div className="space-y-1 text-[11px] text-zinc-500">
+            <div className="flex items-center justify-between gap-2">
+              <span>Est. next retarget</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setDifficulty(nextDifficultyEstimate.nextDifficultyT);
+                  setNextDifficultyEstimate(null);
+                }}
+                className="font-mono text-zinc-300 hover:text-white transition-colors cursor-pointer text-right"
+                title="Use estimated difficulty"
+                aria-label="Use estimated next difficulty"
               >
-                ({nextDifficultyEstimate.changePercent >= 0 ? "+" : ""}
-                {nextDifficultyEstimate.changePercent.toFixed(2)}%)
-              </span>
-            </button>
+                {nextDifficultyEstimate.nextDifficultyT} T
+                <span
+                  className={
+                    nextDifficultyEstimate.changePercent >= 0
+                      ? "ml-1 text-emerald-400"
+                      : "ml-1 text-red-400"
+                  }
+                >
+                  ({nextDifficultyEstimate.changePercent >= 0 ? "+" : ""}
+                  {nextDifficultyEstimate.changePercent.toFixed(2)}%)
+                </span>
+              </button>
+            </div>
+            {nextDifficultyEstimate.retargetTimeLabel && (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
+                <span>Next retarget time</span>
+                <span className="font-mono text-zinc-400 sm:text-right break-words">
+                  {nextDifficultyEstimate.retargetTimeLabel}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
