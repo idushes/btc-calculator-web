@@ -8,36 +8,22 @@ interface CalculatorInputsProps {
   setDifficulty: (value: number | string) => void;
 }
 
-const DIFFICULTY_FETCH_TIMEOUT_MS = 8000;
-const DIFFICULTY_ESTIMATE_MAX_ATTEMPTS = 3;
-const DIFFICULTY_ESTIMATE_BLOCK_TOLERANCE = 3;
-
-type MempoolHashrateResponse = {
-  currentDifficulty?: number;
-};
-
-type MempoolDifficultyAdjustmentResponse = {
-  difficultyChange?: number;
-  remainingBlocks?: number;
-  nextRetargetHeight?: number;
-  estimatedRetargetDate?: number;
-};
-
-type MempoolDifficultyAdjustment = MempoolDifficultyAdjustmentResponse & {
-  difficultyChange: number;
-};
-
 type NextDifficultyEstimate = {
   nextDifficultyT: string;
   changePercent: number;
   retargetTimeLabel?: string;
 };
 
+type DifficultyApiResponse = {
+  currentDifficulty?: number;
+  currentDifficultyT?: string;
+  nextDifficultyT?: string;
+  changePercent?: number;
+  estimatedRetargetDate?: number;
+};
+
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
-
-const withCacheBuster = (url: string, attempt = 0) =>
-  `${url}?_=${Date.now()}-${attempt}`;
 
 const formatLocalRetargetTime = (timestamp: unknown) => {
   if (!isFiniteNumber(timestamp)) return undefined;
@@ -55,121 +41,14 @@ const formatLocalRetargetTime = (timestamp: unknown) => {
   return timeZone ? `${dateTime} (${timeZone})` : dateTime;
 };
 
-const fetchWithTimeout = async (url: string): Promise<Response> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DIFFICULTY_FETCH_TIMEOUT_MS);
+const fetchDifficultyData = async () => {
+  const res = await fetch("/api/difficulty", { cache: "no-store" });
 
-  try {
-    const res = await fetch(url, {
-      cache: "no-store",
-      signal: controller.signal,
-    });
-
-    if (!res.ok) {
-      throw new Error(`${url} returned ${res.status} ${res.statusText}`);
-    }
-
-    return res;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-};
-
-const fetchMempoolDifficulty = async (): Promise<number> => {
-  const res = await fetchWithTimeout(
-    withCacheBuster("https://mempool.space/api/v1/mining/hashrate/1m")
-  );
-  const data = (await res.json()) as MempoolHashrateResponse;
-
-  if (!isFiniteNumber(data.currentDifficulty)) {
-    throw new Error("mempool.space response does not include currentDifficulty");
+  if (!res.ok) {
+    throw new Error(`/api/difficulty returned ${res.status} ${res.statusText}`);
   }
 
-  return data.currentDifficulty;
-};
-
-const fetchBlockchainInfoDifficulty = async (): Promise<number> => {
-  const res = await fetchWithTimeout("https://blockchain.info/q/getdifficulty");
-  const difficulty = Number(await res.text());
-
-  if (!Number.isFinite(difficulty)) {
-    throw new Error("blockchain.info response is not a valid difficulty value");
-  }
-
-  return difficulty;
-};
-
-const fetchMempoolBlockHeight = async (): Promise<number> => {
-  const res = await fetchWithTimeout(
-    withCacheBuster("https://mempool.space/api/blocks/tip/height")
-  );
-  const blockHeight = Number(await res.text());
-
-  if (!Number.isInteger(blockHeight)) {
-    throw new Error("mempool.space response is not a valid block height");
-  }
-
-  return blockHeight;
-};
-
-const fetchMempoolDifficultyAdjustment = async (
-  attempt: number
-): Promise<MempoolDifficultyAdjustment> => {
-  const res = await fetchWithTimeout(
-    withCacheBuster("https://mempool.space/api/v1/difficulty-adjustment", attempt)
-  );
-  const data = (await res.json()) as MempoolDifficultyAdjustmentResponse;
-
-  if (!isFiniteNumber(data.difficultyChange)) {
-    throw new Error("mempool.space response does not include difficultyChange");
-  }
-
-  return { ...data, difficultyChange: data.difficultyChange };
-};
-
-const isDifficultyAdjustmentSynced = (
-  data: MempoolDifficultyAdjustmentResponse,
-  currentBlockHeight: number
-) => {
-  if (!isFiniteNumber(data.nextRetargetHeight) || !isFiniteNumber(data.remainingBlocks)) {
-    return true;
-  }
-
-  const expectedRemainingBlocks = Math.max(0, data.nextRetargetHeight - currentBlockHeight);
-
-  return (
-    Math.abs(expectedRemainingBlocks - data.remainingBlocks) <=
-    DIFFICULTY_ESTIMATE_BLOCK_TOLERANCE
-  );
-};
-
-const fetchNextDifficultyEstimate = async (
-  currentDifficulty: number
-): Promise<NextDifficultyEstimate> => {
-  let currentBlockHeight: number | null = null;
-
-  try {
-    currentBlockHeight = await fetchMempoolBlockHeight();
-  } catch (heightError) {
-    console.warn("[Difficulty] block height fetch failed, cannot validate estimate:", heightError);
-  }
-
-  for (let attempt = 0; attempt < DIFFICULTY_ESTIMATE_MAX_ATTEMPTS; attempt += 1) {
-    const data = await fetchMempoolDifficultyAdjustment(attempt);
-
-    if (currentBlockHeight === null || isDifficultyAdjustmentSynced(data, currentBlockHeight)) {
-      return {
-        nextDifficultyT: (
-          (currentDifficulty * (1 + data.difficultyChange / 100)) /
-          1e12
-        ).toFixed(2),
-        changePercent: data.difficultyChange,
-        retargetTimeLabel: formatLocalRetargetTime(data.estimatedRetargetDate),
-      };
-    }
-  }
-
-  throw new Error("mempool.space difficulty adjustment response is stale");
+  return (await res.json()) as DifficultyApiResponse;
 };
 
 export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
@@ -183,22 +62,24 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
     setIsLoading(true);
     setNextDifficultyEstimate(null);
     try {
-      let currentDifficulty: number;
+      const data = await fetchDifficultyData();
+      const diffInTrillions =
+        data.currentDifficultyT ??
+        (isFiniteNumber(data.currentDifficulty)
+          ? (data.currentDifficulty / 1e12).toFixed(2)
+          : null);
 
-      try {
-        currentDifficulty = await fetchMempoolDifficulty();
-      } catch (primaryError) {
-        console.warn("[Difficulty] mempool.space fetch failed, using fallback:", primaryError);
-        currentDifficulty = await fetchBlockchainInfoDifficulty();
+      if (diffInTrillions === null) {
+        throw new Error("/api/difficulty response does not include current difficulty");
       }
-
-      const diffInTrillions = (currentDifficulty / 1e12).toFixed(2);
       setDifficulty(diffInTrillions);
 
-      try {
-        setNextDifficultyEstimate(await fetchNextDifficultyEstimate(currentDifficulty));
-      } catch (estimateError) {
-        console.warn("[Difficulty] next retarget estimate fetch failed:", estimateError);
+      if (data.nextDifficultyT && isFiniteNumber(data.changePercent)) {
+        setNextDifficultyEstimate({
+          nextDifficultyT: data.nextDifficultyT,
+          changePercent: data.changePercent,
+          retargetTimeLabel: formatLocalRetargetTime(data.estimatedRetargetDate),
+        });
       }
     } catch (err) {
       console.error("[Difficulty] Error:", err);
