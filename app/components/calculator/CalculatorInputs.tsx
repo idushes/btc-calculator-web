@@ -116,7 +116,7 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
             Network Difficulty (T)
           </label>
           <a
-            href="https://www.coinwarz.com/mining/bitcoin/difficulty-chart"
+            href="https://mempool.space/graphs/mining/hashrate-difficulty#3y"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[11px] text-zinc-600 hover:text-zinc-300 transition-colors flex items-center gap-1 border-b border-dashed border-zinc-800 hover:border-zinc-500 pb-px"
