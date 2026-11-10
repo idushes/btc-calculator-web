@@ -17,6 +17,7 @@ export default function Calculator() {
   const {
     elecCost, setElecCost,
     difficulty, setDifficulty,
+    nextDifficultyEstimate, setNextDifficultyEstimate,
     blockReward, setBlockReward,
     device1, setDevice1,
     device2, setDevice2,
@@ -26,6 +27,8 @@ export default function Calculator() {
     parsedMargin,
     device1Price,
     device2Price,
+    device1NextPrice,
+    device2NextPrice,
     resetDevice1,
     resetDevice2,
     resetReward,
@@ -118,6 +121,8 @@ export default function Calculator() {
         <CalculatorInputs 
           elecCost={elecCost} setElecCost={setElecCost}
           difficulty={difficulty} setDifficulty={setDifficulty}
+          nextDifficultyEstimate={nextDifficultyEstimate}
+          setNextDifficultyEstimate={setNextDifficultyEstimate}
         />
 
         <div className="space-y-4">
@@ -133,12 +138,14 @@ export default function Calculator() {
           <DeviceCard 
             device={device1} 
             price={device1Price} 
+            nextPrice={device1NextPrice}
             onEdit={() => setActiveModal('device1')} 
           />
 
           <DeviceCard 
             device={device2} 
             price={device2Price} 
+            nextPrice={device2NextPrice}
             onEdit={() => setActiveModal('device2')} 
             isSecondary
           />

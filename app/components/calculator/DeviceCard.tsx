@@ -5,11 +5,12 @@ import { Device } from "../../hooks/useCalculator";
 interface DeviceCardProps {
   device: Device;
   price: number;
+  nextPrice?: number | null;
   onEdit: () => void;
   isSecondary?: boolean;
 }
 
-export const DeviceCard: React.FC<DeviceCardProps> = ({ device, price, onEdit, isSecondary }) => {
+export const DeviceCard: React.FC<DeviceCardProps> = ({ device, price, nextPrice, onEdit, isSecondary }) => {
   return (
     <div className={`relative overflow-hidden group p-4 rounded-2xl bg-zinc-950 border border-zinc-800 transition-all ${
         isSecondary ? 'hover:border-zinc-700' : 'hover:border-orange-500/30'
@@ -27,10 +28,19 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, price, onEdit, i
           </div>
           <div className="text-xs text-zinc-600 font-mono">{device.efficiency} W/Th</div>
         </div>
-        <div className={`text-3xl font-bold font-mono ${
+        <div className="text-right">
+          <div className={`text-3xl font-bold font-mono ${
             isSecondary ? 'text-zinc-300' : 'text-white'
-        }`}>
-          ${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(price)}
+          }`}>
+            ${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(price)}
+          </div>
+          {nextPrice != null && (
+            <div className="mt-1 text-[11px] text-zinc-500">
+              Next retarget: <span className="font-mono text-zinc-400">
+                ${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(nextPrice)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
       {!isSecondary && (

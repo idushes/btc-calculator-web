@@ -1,18 +1,15 @@
 import React, { useState } from "react";
 import { Zap, Server, RefreshCw, ExternalLink } from "lucide-react";
+import type { NextDifficultyEstimate } from "../../hooks/useCalculator";
 
 interface CalculatorInputsProps {
   elecCost: number | string;
   setElecCost: (value: number | string) => void;
   difficulty: number | string;
   setDifficulty: (value: number | string) => void;
+  nextDifficultyEstimate: NextDifficultyEstimate | null;
+  setNextDifficultyEstimate: (value: NextDifficultyEstimate | null) => void;
 }
-
-type NextDifficultyEstimate = {
-  nextDifficultyT: string;
-  changePercent: number;
-  retargetTimeLabel?: string;
-};
 
 type DifficultyApiResponse = {
   currentDifficulty?: number;
@@ -52,11 +49,10 @@ const fetchDifficultyData = async () => {
 };
 
 export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
-  elecCost, setElecCost, difficulty, setDifficulty
+  elecCost, setElecCost, difficulty, setDifficulty,
+  nextDifficultyEstimate, setNextDifficultyEstimate
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [nextDifficultyEstimate, setNextDifficultyEstimate] =
-    useState<NextDifficultyEstimate | null>(null);
 
   const fetchDifficulty = async () => {
     setIsLoading(true);
@@ -74,7 +70,12 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
       }
       setDifficulty(diffInTrillions);
 
-      if (data.nextDifficultyT && isFiniteNumber(data.changePercent)) {
+      if (
+        data.nextDifficultyT &&
+        Number.isFinite(Number(data.nextDifficultyT)) &&
+        Number(data.nextDifficultyT) > 0 &&
+        isFiniteNumber(data.changePercent)
+      ) {
         setNextDifficultyEstimate({
           nextDifficultyT: data.nextDifficultyT,
           changePercent: data.changePercent,
@@ -130,7 +131,6 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
             step="0.01"
             value={difficulty}
             onChange={(e) => {
-              setNextDifficultyEstimate(null);
               setDifficulty(e.target.value);
             }}
             className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all font-mono text-lg"
@@ -138,7 +138,6 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
           />
           <button
             onClick={() => {
-              setNextDifficultyEstimate(null);
               setDifficulty((Number(difficulty) * 0.99).toFixed(2));
             }}
             className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
@@ -156,7 +155,6 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
           </button>
           <button
             onClick={() => {
-              setNextDifficultyEstimate(null);
               setDifficulty((Number(difficulty) * 1.01).toFixed(2));
             }}
             className="px-3 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:border-zinc-600 transition-all font-mono text-sm"
@@ -173,7 +171,6 @@ export const CalculatorInputs: React.FC<CalculatorInputsProps> = ({
                 type="button"
                 onClick={() => {
                   setDifficulty(nextDifficultyEstimate.nextDifficultyT);
-                  setNextDifficultyEstimate(null);
                 }}
                 className="font-mono text-zinc-300 hover:text-white transition-colors cursor-pointer text-right"
                 title="Use estimated difficulty"

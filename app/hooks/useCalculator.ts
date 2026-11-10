@@ -7,6 +7,12 @@ export interface Device {
   efficiency: number;
 }
 
+export interface NextDifficultyEstimate {
+  nextDifficultyT: string;
+  changePercent: number;
+  retargetTimeLabel?: string;
+}
+
 export const DEFAULT_ELEC_COST = 0.06;
 export const DEFAULT_DIFFICULTY = 140; // Trillions
 export const DEFAULT_BLOCK_REWARD = 3.125;
@@ -19,6 +25,7 @@ export const useCalculator = () => {
   // State
   const [elecCost, setElecCostRaw] = useState<number | string>(DEFAULT_ELEC_COST);
   const [difficulty, setDifficultyRaw] = useState<number | string>(DEFAULT_DIFFICULTY);
+  const [nextDifficultyEstimate, setNextDifficultyEstimate] = useState<NextDifficultyEstimate | null>(null);
   const [blockReward, setBlockRewardRaw] = useState<number | string>(DEFAULT_BLOCK_REWARD);
   
   const [device1, setDevice1Raw] = useState<Device>(DEFAULT_DEVICE_1);
@@ -30,7 +37,11 @@ export const useCalculator = () => {
 
   // Wrapped setters: clear shared view flag on any user interaction
   const setElecCost = useCallback((v: number | string) => { isSharedView.current = false; setElecCostRaw(v); }, []);
-  const setDifficulty = useCallback((v: number | string) => { isSharedView.current = false; setDifficultyRaw(v); }, []);
+  const setDifficulty = useCallback((v: number | string) => {
+    isSharedView.current = false;
+    setNextDifficultyEstimate(null);
+    setDifficultyRaw(v);
+  }, []);
   const setBlockReward = useCallback((v: number | string) => { isSharedView.current = false; setBlockRewardRaw(v); }, []);
   const setDevice1 = useCallback((v: Device) => { isSharedView.current = false; setDevice1Raw(v); }, []);
   const setDevice2 = useCallback((v: Device) => { isSharedView.current = false; setDevice2Raw(v); }, []);
@@ -114,11 +125,11 @@ export const useCalculator = () => {
   const parsedMargin = Number(margin) || 0;
 
   // Calculation Function
-  const calculateFloorPrice = (efficiency: number) => {
+  const calculateFloorPrice = (efficiency: number, difficultyT = parsedDifficulty) => {
     if (parsedBlockReward === 0) return 0;
     
     // Floor Price = (Difficulty * 2^32 * Efficiency * ElecCost) / (BlockReward * 10^12 * 3.6e6)
-    const difficultyRaw = parsedDifficulty * 10 ** 12;
+    const difficultyRaw = difficultyT * 10 ** 12;
     const hashesPerBlock = difficultyRaw * 2 ** 32;
     const energyJoules = hashesPerBlock * (efficiency / 10 ** 12);
     const energyKwh = energyJoules / J_TO_KWH;
@@ -133,6 +144,12 @@ export const useCalculator = () => {
 
   const device1Price = calculateFloorPrice(device1.efficiency);
   const device2Price = calculateFloorPrice(device2.efficiency);
+  const device1NextPrice = nextDifficultyEstimate
+    ? calculateFloorPrice(device1.efficiency, Number(nextDifficultyEstimate.nextDifficultyT))
+    : null;
+  const device2NextPrice = nextDifficultyEstimate
+    ? calculateFloorPrice(device2.efficiency, Number(nextDifficultyEstimate.nextDifficultyT))
+    : null;
 
   const resetDevice1 = () => setDevice1(DEFAULT_DEVICE_1);
   const resetDevice2 = () => setDevice2(DEFAULT_DEVICE_2);
@@ -262,6 +279,8 @@ export const useCalculator = () => {
     setElecCost,
     difficulty,
     setDifficulty,
+    nextDifficultyEstimate,
+    setNextDifficultyEstimate,
     blockReward,
     setBlockReward,
     device1,
@@ -276,6 +295,8 @@ export const useCalculator = () => {
     parsedMargin,
     device1Price,
     device2Price,
+    device1NextPrice,
+    device2NextPrice,
     resetDevice1,
     resetDevice2,
     resetReward,
