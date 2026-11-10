@@ -36,7 +36,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, price, nextPrice
           </div>
           {nextPrice != null && (
             <div className="mt-1 text-[11px] text-zinc-500">
-              Next retarget: <span className="font-mono text-zinc-400">
+              <span className="font-mono text-zinc-400">
                 ${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(nextPrice)}
               </span>
             </div>
